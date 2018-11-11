@@ -13,6 +13,7 @@ public class ScaleViewport : MonoBehaviour {
     /// </summary>
     public enum ScaleMode
     {
+        ExactResolution,
         ConstantDownscale,
         ScaleVerticalInterger,
         ExactVertical
@@ -48,6 +49,8 @@ public class ScaleViewport : MonoBehaviour {
     /// The current vertical resolution
     /// </summary>
     public int verticalResolution;
+
+    public Vector2 constantResolution;
     
     public void OnRenderImage(RenderTexture source, RenderTexture destination)
     {
@@ -64,13 +67,25 @@ public class ScaleViewport : MonoBehaviour {
                 }
                 horizontalResolution = Mathf.FloorToInt(Screen.width / internalDownsampleScale);
                 break;
+
             case ScaleMode.ExactVertical: // Force maximum vertical resolution
                 verticalResolution = maximumVerticalResolution;
-                internalDownsampleScale = Screen.height / verticalResolution;
+
+                if(Screen.height < verticalResolution) // Can't enforce if screen resolution is less then actual vertical resolution.
+                {
+                    verticalResolution = Screen.height;
+                }
+
+                internalDownsampleScale = (float)Screen.height / (float)verticalResolution;
                 horizontalResolution = Mathf.FloorToInt(Screen.width / internalDownsampleScale);
                 break;
-            case ScaleMode.ConstantDownscale:
-            default:
+
+            case ScaleMode.ExactResolution: // Set a resolution.
+                horizontalResolution = (int)constantResolution.x;
+                verticalResolution = (int)constantResolution.y;
+                break;
+            default: // Constant
+                internalDownsampleScale = constantDownscale;
                 horizontalResolution = Mathf.FloorToInt(Screen.width / constantDownscale);
                 verticalResolution = Mathf.FloorToInt(Screen.height / constantDownscale);
                 break;
