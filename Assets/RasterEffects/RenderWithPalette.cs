@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using System.Linq;
 
 /// <summary>
 /// Reduces the colors in the scene to these colors
@@ -125,32 +126,40 @@ public class RenderWithPalette : MonoBehaviour
         }
 
         // Create new color array
-        Color[] newColors = new Color[size];
-        
-        // Combine all colors into one array.
-        int colorIndex = 0;
+        List<Color> newColors = new List<Color>();
+
         foreach (var item in palettes)
         {
             if(item != null)
             {
                 foreach (var c in item.colors)
                 {
-                    // We must deal with color space so the colors are the exact colors on screen.
-                    if(currentColorSpace == ColorSpace.Linear)
+                    Color toAdd;
+
+                    // Convert to linear if needed.
+                    if (currentColorSpace == ColorSpace.Linear)
                     {
-                        newColors[colorIndex++] = c.linear;
+                        toAdd = c.linear;
                     }
                     else
                     {
-                        newColors[colorIndex++] = c;
+                        toAdd = c;
+                    }
+
+                    // If we don't already have this color, add it
+                    // This is because the shader only has a limited amount of space for colors,
+                    // And every additional color adds processing cost per pixel.
+                    if(!newColors.Any(test => test == toAdd))
+                    {
+                        newColors.Add(toAdd);
                     }
                     
                 }
             }
         }
-
+        
         // Set new colors
-        colors = newColors;
+        colors = newColors.ToArray();
     }
 
     public void DestroyMaterial()
